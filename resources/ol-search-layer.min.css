@@ -1,0 +1,27 @@
+.search-layer{top:65px;left:.5em}.ol-touch .search-layer{top:80px}
+
+.search-layer button{background-repeat:no-repeat;background-position:center center;top:2px;left:2px}
+
+/* ========================================================================= */
+/* AQUÍ CAMBIAMOS EL ANCHO DEL FORMULARIO A 500px */
+/* ========================================================================= */
+.search-layer-input-search{
+    position:absolute;
+    top:2px;
+    left:32px;
+    width: 280px !important; /* <--- Cambiado de 280px a 500px */
+    padding:5px;
+    border:1px solid #ccc;
+	  font-family: inherit;
+    font-size:.875rem
+}
+/* ========================================================================= */
+
+.search-layer-collapsed{display:none}
+
+.search-layer form select {
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+    padding: 2px;
+}

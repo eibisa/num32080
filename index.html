@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="./resources/ol.css">
+        <link rel="stylesheet" href="resources/fontawesome-all.min.css">
+        <link rel="stylesheet" type="text/css" href="resources/horsey.min.css">
+        <link rel="stylesheet" type="text/css" href="resources/ol-search-layer.min.css">
+        <link href="resources/photon-geocoder-autocomplete.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
+        <link rel="stylesheet" href="./resources/qgis2web.css">
+        <style>
+        html, body {
+            background-color: #ffffff;
+        }
+        .ol-control > * {
+            background-color: #f8f8f8!important;
+            color: #444444!important;
+            border-radius: 0px;
+        }
+        .ol-attribution a, .gcd-gl-input::placeholder, .search-layer-input-search::placeholder {
+            color: #444444!important;
+        }
+        .search-layer-input-search {
+            background-color: #f8f8f8!important;
+        }
+        .ol-control > *:focus, .ol-control >*:hover {
+            background-color: rgba(248, 248, 248, 0.7)!important;
+        } 
+        .ol-control {
+            background-color: rgba(255,255,255,.4) !important;
+            padding: 2px !important;
+        } 
+        
+        
+        /* Estilos para el nuevo buscador de Referencia Catastral */
+#search-rc {
+    background-color: #f8f8f8 !important;
+    color: #444444 !important;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 12px;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+#search-rc:focus {
+    outline: none;
+    border-color: #4a90e2;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 4px rgba(74, 144, 226, 0.4);
+}
+
+/* Evitar que el contenedor Horsey de sugerencias tape otros elementos */
+.horsey-suggestions {
+    max-height: 200px;
+    overflow-y: auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+        
+        
+        
+        </style>
+
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        /* Estilo para el logo */
+#logo-empresa {
+    position: absolute;
+    bottom: 14px; /* Distancia desde la parte inferior */
+    right: 0px;  /* Distancia desde la derecha */
+    z-index: 1000;
+    background: rgba(255,255,255,0.7);
+    padding: 5px;
+    border-radius: 5px;
+}
+#logo-empresa img {
+    width: 250px; /* Ajusta el tama�o seg�n tu preferencia */
+}
+
+/* Estilo para la leyenda */
+#mapa-leyenda {
+    position: absolute;
+    bottom: 30px;
+    left: 10px;
+    z-index: 1000;
+    background: rgba(255,255,255,0.8);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+#mapa-leyenda img {
+    max-width: 200px; /* Ajusta el ancho de la leyenda */
+}
+        
+ /* Estilo del logotipo para pantallas grandes */
+.logo-ministerio {
+    max-width: 280px;
+    width: 100%;
+    height: auto;
+}
+
+/* Reducción de tamaño automática en pantallas móviles */
+@media (max-width: 768px) {
+    .logo-ministerio {
+        max-width: 140px !important;
+    }
+}       
+        </style>
+        <title></title>
+    </head>
+    <body>
+<div id="map">
+    <div id="logo-empresa">
+        <img src="images/logo_ministerio.svg" class="logo-ministerio" alt="Ministerio para la Transición Ecológica y el Reto Demográfico">
+    </div>
+
+
+
+    <div id="popup" class="ol-popup">
+        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+        <div id="popup-content"></div>
+    </div>
+</div>
+        <script src="resources/qgis2web_expressions.js"></script>
+        <script src="./resources/functions.js"></script>
+        <script src="./resources/ol.js"></script>
+        <script src="resources/horsey.min.js"></script>
+        <script src="resources/ol-search-layer.js"></script>
+        <script src="./resources/ol-layerswitcher.js"></script>
+        <script src="resources/photon-geocoder-autocomplete.min.js"></script>
+        <script src="layers/EibCcl_Numeracion_Catastro_3.js"></script>
+        <script src="styles/EibCcl_Numeracion_Catastro_3_style.js"></script>
+        <script src="layers/Eib_Lugares_0.js"></script>
+        <script src="styles/Eib_Lugares_0_style.js"></script>
+        <script src="layers/Eib_Ejes_0.js"></script>
+        <script src="styles/Eib_Ejes_0_style.js"></script>
+        <script src="layers/Eib_Parroquias_0.js"></script>
+        <script src="styles/Eib_Parroquias_0_style.js"></script>
+        <script src="./layers/layers.js" type="text/javascript"></script> 
+        <script src="./resources/Autolinker.min.js"></script>
+        <script src="./resources/qgis2web.js"></script>
+        
+<script>
+    var observarPopup = new MutationObserver(function(mutations) {
+        // Desconectamos temporalmente para evitar el bucle infinito al modificar el DOM
+        observarPopup.disconnect();
+
+        var popupContent = document.getElementById('popup-content');
+        if (popupContent) {
+            var links = popupContent.getElementsByTagName('a');
+            var modificado = false;
+
+            for (var i = 0; i < links.length; i++) {
+                var url = links[i].href;
+                if (url.includes("lh3.googleusercontent") && !links[i].querySelector('img')) {
+                    try {
+                        links[i].innerHTML = '<img src="' + url + '" style="width:120px; height:auto; border-radius:5px; border:1px solid #ccc; display:block; margin-top:5px;" alt="Ver imagen">';
+                        modificado = true;
+                    } catch (e) {
+                        console.error("Error al procesar enlace de Drive", e);
+                    }
+                }
+            }
+        }
+
+        // Volvemos a conectar el observador para el siguiente clic en el mapa
+        conectarObservador();
+    });
+
+    function conectarObservador() {
+        var target = document.getElementById('popup');
+        if (target) {
+            observarPopup.observe(target, { childList: true, subtree: true });
+        }
+    }
+
+    // Inicio inicial
+    conectarObservador();
+</script>
+        
+<script>
+    // 1. Definimos el �rea l�mite (Extent)
+ //   var areaLimitada = ol.proj.transformExtent([-7.89, 42.12, -7.49, 42.52], 'EPSG:4326', 'EPSG:3857');
+
+    // 2. Funci�n para forzar el l�mite en cada movimiento
+ /*   function forzarLimite() {
+        var view = map.getView();
+        var currentCenter = view.getCenter();
+        
+        // Si el centro se sale del �rea, lo devolvemos al punto m�s cercano dentro del l�mite
+        if (!ol.extent.containsCoordinate(areaLimitada, currentCenter)) {
+            var nuevoCentro = [
+                Math.max(areaLimitada[0], Math.min(areaLimitada[2], currentCenter[0])),
+                Math.max(areaLimitada[1], Math.min(areaLimitada[3], currentCenter[1]))
+            ];
+            view.setCenter(nuevoCentro);
+        }
+    }*/
+
+    // 3. Aplicamos la configuraci�n inicial
+    map.getView().setCenter(ol.proj.fromLonLat([-7.83, 42.245]));
+    map.getView().setZoom(14);
+
+    // 4. El "candado": Ejecutar la funci�n cada vez que el mapa se mueva
+ //   map.on('postrender', forzarLimite);
+    
+    // Tambi�n limitamos el zoom para que no se alejen demasiado y vean el vac�o
+    map.getView().setMinZoom(11); 
+</script>
+
+
+    </body>
+</html>
