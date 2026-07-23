@@ -273,8 +273,8 @@ var group_Nucleos_y_Ejes = new ol.layer.Group({
 
 
 // Visibilidades iniciales de arranque (Por defecto arrancamos mostrando Estado de Conservación)
-lyr_GoogleSatellite_0.setVisible(true);
-lyr_Ortoimagen_1.setVisible(false);
+lyr_GoogleSatellite_0.setVisible(false);
+lyr_Ortoimagen_1.setVisible(true);
 lyr_Catastro_2.setVisible(false);
 
 lyr_Bueno.setVisible(false); lyr_Regular.setVisible(false); lyr_Malo.setVisible(false); lyr_Ruina.setVisible(false); lyr_Vacio.setVisible(false);
