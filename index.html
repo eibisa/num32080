@@ -220,6 +220,80 @@
     map.getView().setMinZoom(11); 
 </script>
 
+<!-- ================================================================= -->
+<!-- RESPUESTA JSON DIRECTA AL CONSULTAR POR URL -->
+<!-- ================================================================= -->
+<script>
+(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refcat = urlParams.get('refcat');
+    const fid = urlParams.get('fid');
+    const q = urlParams.get('q') || urlParams.get('direccion');
+    const descargar = urlParams.get('download') === 'true'; // Opcional: ?download=true para descargar el .json
+
+    // Si hay parámetros en la URL, se interrumpe la interfaz visual y se devuelve el JSON
+    if (refcat || fid || q) {
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof json_EibCcl_Numeracion_Catastro_3 === 'undefined') {
+                document.open();
+                document.write('<pre>{"error": "El archivo de datos GeoJSON no esta disponible."}</pre>');
+                document.close();
+                return;
+            }
+
+            const features = json_EibCcl_Numeracion_Catastro_3.features;
+
+            const filtrados = features.filter(f => {
+                const p = f.properties;
+                if (refcat) return p.REFCAT === refcat;
+                if (fid) return p.fid == fid;
+                if (q) {
+                    const search = q.toLowerCase();
+                    return (p.DIRECCION && p.DIRECCION.toLowerCase().includes(search)) ||
+                           (p.EibCcl_Callejero_eibEntAgp && p.EibCcl_Callejero_eibEntAgp.toLowerCase().includes(search));
+                }
+                return false;
+            });
+
+            const resultado = filtrados.map(f => {
+                const p = f.properties;
+                const item = {
+                    DIRECCION: p.DIRECCION,
+                    EibCcl_Callejero_eibEntAgp: p.EibCcl_Callejero_eibEntAgp,
+                    ESTADOS_CONS_Estado_Conservacion: p.ESTADOS_CONS_Estado_Conservacion
+                };
+
+                for (let i = 1; i <= 9; i++) {
+                    const key = `FOTOS_foto_0${i}`;
+                    item[key] = p[key] ?? null;
+                }
+
+                return item;
+            });
+
+            const jsonString = JSON.stringify(resultado, null, 2);
+
+            // Si se pasa &download=true fuerza la descarga del fichero .json
+            if (descargar) {
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `resultado_${refcat || fid || 'catastro'}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                // Muestra la respuesta JSON limpia directamente en pantalla sin cargar la interfaz del mapa
+                document.open();
+                document.write('<pre style="word-wrap: break-word; white-space: pre-wrap; font-family: monospace; background: #1e1e1e; color: #d4d4d4; padding: 15px; margin: 0; min-height: 100vh;">' + jsonString + '</pre>');
+                document.close();
+            }
+        });
+    }
+})();
+</script>
 
     </body>
 </html>
